@@ -1,0 +1,85 @@
+Nomes:  Agnaldo Nunes de Oliveira - 11221946
+	Gustavo Santos Morais 	  - 11221932
+	Matheus Barbosa Silva	  - 11221741
+
+**************************MANUAL DE USUÁRIO**************************
+Para iniciar o programa, informe o nome do arquivo de texto de onde
+as entradas serão retiradas: ./ep1TecProg <nome-do-arquivo>
+
+Para a compilação, use:
+  gcc -c spacewar.c -o libspacewar.o
+  ar rv libspacewar.a libspacewar.o
+  gcc ep1TecProg.c -L. libspacewar.a -o ep1TecProg -lm
+
+A saída é apresentada atualizando os valores de posição (coordenadas)
+das naves e projéteis a cada instante do tempo total de simulação.
+
+Obs.: o nome da nave pode conter até 15 caracteres!
+
+****************************FUNCIONAMENTO****************************
+Primeiro, todas as informações das naves e do planeta são lidas do ar-
+quivo de texto dado na linha de comando (obtido por argv[1]) e então
+são armazenadas em structs de seus respectivos tipos:
+1. Coordenada: contém dois floats x e y para armazenar a coordenada da
+posição de um corpo no plano;
+2 . Força: uma força representa um vetor do plano aplicado em um ponto.
+Assim, a coordenada inicio possui a coordenada do corpo no qual a força
+age, enquanto fim indica a direção em que o corpo se desloca de acordo
+com a intensidade desta força (float).
+3. Nave: feito como especificado no enunciado, adicionando a quantidade
+de projéteis restantes - a ser usada nas próximas fases do EP.
+4. Projetil: feito como especificado no enunciado, adicionando um campo
+que aponta para um struct projetil - de modo a formar uma lista ligada
+de projeteis, o que facilitaria a remoção de projeteis do plano no decor-
+rer do jogo.
+5. Planeta: feito como especificado no enunciado, sua coordenada é sempre
+a origem, ou seja, (0, 0).
+
+Os próximos passos são repetidos em cada instante até o fim do tempo to-
+tal de simulação. Para isso, são utilizadas as seguintes funções:
+1. insereProjetil: recebe as informações de um projetil, insere as infor-
+mações em um struct do tipo Projetil e insere-o na lista ligada recebida
+como parâmetro.
+2. distanciaEntrePontos: calcula a distância entre dois pontos do plano
+de acordo com a fórmula D(a, b) = sqrt( (ax - bx)² + (ay - by)²)
+3. forcaGravitacional: recebe a massa de dois corpos e a distância entre
+seus centros
+4. normalizaForca: recebe a coordenada de dois corpos e a força da atra-
+ção entre eles e retorna a forca que vai de 'inicio' a 'fim' com a inten-
+sidade dada. Para isso, calcula-se a norma do vetor ab (inicio-fim), que
+é usada para dividir as coordenadas deste vetor ab a fim de normalizá-lo.
+Com o vetor normalizado, as coordenadas dele são multiplicadas pela
+intensidade da força, ajustando o comprimento do vetor força retornado.
+5. forcaResultante: calcula a força resultante entre duas forças que par-
+tem do mesmo ponto (isto é, os corpos que sofrem atração pelos demais). 
+Isso é feito a partir da relação:
+   * Fr = sqrt(F1²+F2² + 2*F1*F2*cosΘ)
+E cosΘ é calculado por:
+   * cosΘ = <a, b> / ||a|| * ||b||
+6. calcCoordForcaRes: é dividida em casos:
+   a) As forças estão alinhadas no eixo x: logo, a coordenada final da 
+força resultante é |F2.y - F1.y|, onde F2 e F1 são as forças que geram
+a força resultante. A coordenada de início da força resultante é igual
+a coordenada de início de qualquer uma de suas geradoras. 
+   b) As forças estão alinhadas no eixo y: logo, a coordenada final da 
+força resultante é |F2.x - F1.x|, onde F2 e F1 são as forças que geram
+a força resultante. A coordenada de início da força resultante é igual
+a coordenada de início de qualquer uma de suas geradoras. 
+   C) As forças estão desalinhadas: utiliza-se a regra do paralelogramo
+para determinar o ponto final da força resultante (a + b = R).
+Depois, a força resultante deve ser normalizada de acordo com suas coor-
+denadas determinadas anteriormente.
+
+
+***NO PROGRAMA PRINCIPAL
+Considere o processo para a nave 1 (os procedimentos são repetidos para
+a nave 2 e todos os demais projéteis):
+Primeiro calcula-se as forças gravitacionais entre as duas naves e entre
+a nave1 e o planeta, estas duas forças devem ser normalizadas e então a
+intensidade e as coordenadas da força resultante são determinadas (e a
+força resultante é normalizada dentro da função calcCoordForcaRec). A 
+partir da força resultante obtida inicialmente, são calculadas novas for-
+ças resultantes entre a força resultante inicial e a força exercida por
+cada um dos projéteis. Ao terminar este processo com todos os projéteis,
+é gerada a forcaFinal, que determina a aceleração do corpo nave1 e neste
+instante a nave desloca-se para o ponto final do vetor forcaFinal.
