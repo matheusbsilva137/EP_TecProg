@@ -1,4 +1,4 @@
-gcc -c spacewar.c -o libspacewar.o
+gcc -g -c spacewar.c -o libspacewar.o
 ar rv libspacewar.a libspacewar.o
-gcc ep1TecProg.c -L. libspacewar.a -o ep1TecProg -lm
-./ep1TecProg 6.txt
+gcc -g ep1TecProg.c -L. libspacewar.a -o ep1TecProg -lm
+./ep1TecProg 0.txt

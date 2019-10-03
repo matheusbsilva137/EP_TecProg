@@ -2,6 +2,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include "spacewar.h"
+#define G 6.674e-11
 
 void insereProjetil(double mas, double posx, double posy, double velx, double vely, Projetil** inicio);
 
@@ -35,7 +36,7 @@ double distanciaEntrePontos(Coordenada c1, Coordenada c2){
 
 double forcaGravitacional(double m1, double m2, double d){
     double forca;
-    forca = (m1 * m2) / (pow(d,2));
+    forca = G*(m1 * m2) / (pow(d,2));
 
     return forca;
 }
@@ -53,10 +54,10 @@ Forca normalizaForca (Coordenada inicio, Coordenada fim, double intensidade){
     if(intensidade <= eps || norma <=eps){
         f.fim.pos_x = inicio.pos_x;
         f.fim.pos_y = inicio.pos_y;
-    }else{     
-
-        c.pos_x = (f.fim.pos_x - f.inicio.pos_x)/norma;
-        c.pos_y = (f.fim.pos_y - f.inicio.pos_y)/norma;
+        f.intensidade = 0;
+    }else{
+        c.pos_x = (fim.pos_x - inicio.pos_x)/norma;
+        c.pos_y = (fim.pos_y - inicio.pos_y)/norma;
 
         f.fim.pos_x = c.pos_x * intensidade;
         f.fim.pos_y = c.pos_y * intensidade;
@@ -98,7 +99,8 @@ double forcaResultante(Forca forca1, Forca forca2){
 Forca calcCoordForcaRes (Forca forca1, Forca forca2, double intensidade){
     Coordenada fr;
     Forca forcaResultante;
-    if(forca1.fim.pos_x == forca2.fim.pos_x){
+    if( fabs(forca1.fim.pos_x - forca2.fim.pos_x) <= eps){
+        printf("Alinhados em x\n");
         /*os pontos estão alinhados em algum x*/
         fr.pos_x = forca1.fim.pos_x;
 
@@ -107,7 +109,8 @@ Forca calcCoordForcaRes (Forca forca1, Forca forca2, double intensidade){
         }else{
             fr.pos_y = forca2.fim.pos_y - forca1.fim.pos_y;
         }
-    }else if(forca1.fim.pos_y == forca2.fim.pos_y){
+    }else if( fabs(forca1.fim.pos_y - forca2.fim.pos_y) <= eps ){
+        printf("Alinhados em y");
         /*os pontos estão alinhados em algum y*/
         fr.pos_y = forca1.fim.pos_y;
 
@@ -120,8 +123,9 @@ Forca calcCoordForcaRes (Forca forca1, Forca forca2, double intensidade){
         /*os pontos estão desalinhados, aplico a regra do palalelogramo
         somando os vetores. Assim, consigo a coordenada do ponto final
         da forca resultante*/
-        fr.pos_x = forca1.fim.pos_x + forca2.fim.pos_x;
-        fr.pos_y = forca1.fim.pos_y + forca2.fim.pos_y;
+        printf("Desalinhadso\n");
+        fr.pos_x = forca1.fim.pos_x - forca2.fim.pos_x;
+        fr.pos_y = forca1.fim.pos_y - forca2.fim.pos_y;
     }
 
     forcaResultante.inicio.pos_x = forca1.inicio.pos_x;

@@ -12,7 +12,7 @@ int main(int argc, char *argv[]){
     FILE* arquivo;
     Planeta  planetaJogo;
     Nave nave1, nave2;
-    int  totalProjeteis, k = 0;
+    int  totalProjeteis, k = 0, direcao;
     float i;
     double masP, posxP, posyP, velxP, velyP, tmpTotalSimul, tempoDeVida;
     double d, fr, f1, f2, fproj = 0;
@@ -30,21 +30,21 @@ int main(int argc, char *argv[]){
     fscanf(arquivo, "%s %lf %lf %lf %lf %lf", nave2.nome, &(nave2.massa), &(nave2.coordenadas.pos_x), &(nave2.coordenadas.pos_y), &(nave2.vel_x), &(nave2.vel_y) );
     fscanf(arquivo, "%d %lf", &(totalProjeteis), &(tempoDeVida));
 
-    nave1.massa = nave1.massa / Mt;
-    nave2.massa = nave2.massa / Mt;                 /*Conversão da massa para a unidade Mt */
-    planetaJogo.massa = planetaJogo.massa / Mt;
+    nave1.massa = nave1.massa;
+    nave2.massa = nave2.massa;                 /*Conversão da massa para a unidade Mt */
+    planetaJogo.massa = planetaJogo.massa;
 
-    nave1.coordenadas.pos_x = nave1.coordenadas.pos_x / Rt;
-    nave1.coordenadas.pos_y = nave1.coordenadas.pos_y / Rt;
-    nave2.coordenadas.pos_x = nave2.coordenadas.pos_x / Rt; /*Conversão da massa para a unidade Mt */
-    nave2.coordenadas.pos_y = nave2.coordenadas.pos_y / Rt;
+    nave1.coordenadas.pos_x = nave1.coordenadas.pos_x;
+    nave1.coordenadas.pos_y = nave1.coordenadas.pos_y;
+    nave2.coordenadas.pos_x = nave2.coordenadas.pos_x; /*Conversão da massa para a unidade Mt */
+    nave2.coordenadas.pos_y = nave2.coordenadas.pos_y;
 
     planetaJogo.coordenadas.pos_x = 0;
     planetaJogo.coordenadas.pos_y = 0;
 
     for (i = 1; i <= totalProjeteis; i++){
         fscanf(arquivo, "%lf %lf %lf %lf %lf", &(masP), &(posxP), &(posyP), &(velxP), &(velyP) );
-        insereProjetil(masP/Mt, posxP/Rt, posyP/Rt, velxP, velyP, &listaProjeteis);
+        insereProjetil(masP, posxP, posyP, velxP, velyP, &listaProjeteis);
     }
     aux = listaProjeteis;
     proj = listaProjeteis;
@@ -54,6 +54,14 @@ int main(int argc, char *argv[]){
 
     for(i = 0; i < tmpTotalSimul; i = i+delta_t){
         printf("******Tempo %f\n", i);
+        printf("NAVE 1: (%lf , %lf)\n", nave1.coordenadas.pos_x, nave1.coordenadas.pos_y);
+        printf("NAVE 2: (%lf , %lf)\n", nave2.coordenadas.pos_x, nave2.coordenadas.pos_y);
+        for(k = 0; k < totalProjeteis && aux != NULL; k++, aux = aux->prox){
+            aux->coordenadas.pos_x = coordProjeteis[k].pos_x;
+            aux->coordenadas.pos_y = coordProjeteis[k].pos_y;
+            printf("PROJÉTIL %d: (%lf , %lf)\n", k+1, aux->coordenadas.pos_x, aux->coordenadas.pos_y);
+        }
+
         proj = listaProjeteis;
 
         /*NAVE 1*/
@@ -81,13 +89,13 @@ int main(int argc, char *argv[]){
             aux = aux -> prox;
         }
 
-        velNave.inicio.pos_x = nave1.coordenadas.pos_x; velNave.inicio.pos_y = nave1.coordenadas.pos_y;
+        /*velNave.inicio.pos_x = nave1.coordenadas.pos_x; velNave.inicio.pos_y = nave1.coordenadas.pos_y;
         velNave.fim.pos_x    = nave1.vel_x; velNave.fim.pos_y = nave1.vel_y;
         velNave.intensidade  = sqrt( pow(nave1.vel_x,2) + pow(nave1.vel_y,2));
         velNave              = normalizaForca(nave1.coordenadas, velNave.fim , velNave.intensidade);
 
         fr = forcaResultante(velNave, forcaFinalN1);
-        forcaFinalN1 = calcCoordForcaRes(forcaFinalN1, velNave, fr);
+        forcaFinalN1 = calcCoordForcaRes(forcaFinalN1, velNave, fr);*/
 
         if(nave1.massa > eps){
             aceleracao = forcaFinalN1.intensidade / nave1.massa;
@@ -99,8 +107,11 @@ int main(int argc, char *argv[]){
             a aceleração pode tender a infinito, não representável*/
         }
         
-        deslocamentoN1 = sqrt(pow(nave1.vel_x,2) + pow(nave1.vel_y, 2))*i + (aceleracao*i*i/2);
-        forcaFinalN1 = normalizaForca(nave1.coordenadas, forcaFinalN1.fim, deslocamentoN1);
+        nave1.coordenadas.pos_x += nave1.vel_x * delta_t;
+        nave1.coordenadas.pos_y += nave1.vel_y * delta_t;
+
+        nave1.vel_x += aceleracao * delta_t;
+        nave1.vel_y += aceleracao * delta_t;        
 
         /*NAVE 2*/
         aux = listaProjeteis;
@@ -128,14 +139,6 @@ int main(int argc, char *argv[]){
             aux = aux -> prox;
         }
 
-        velNave.inicio.pos_x = nave2.coordenadas.pos_x; velNave.inicio.pos_y = nave2.coordenadas.pos_y;
-        velNave.fim.pos_x    = nave2.vel_x; velNave.fim.pos_y = nave2.vel_y;
-        velNave.intensidade  = sqrt( pow(nave2.vel_x,2) + pow(nave2.vel_y,2));
-        velNave              = normalizaForca(nave2.coordenadas, velNave.fim , velNave.intensidade);
-
-        fr = forcaResultante(velNave, forcaFinalN2);
-        forcaFinalN2 = calcCoordForcaRes(forcaFinalN2, velNave, fr);
-
         if(nave2.massa > eps){
             aceleracao = forcaFinalN2.intensidade / nave2.massa;
         }else{
@@ -145,9 +148,18 @@ int main(int argc, char *argv[]){
             /*Se a massa é muito pequena e a força não é 0, 
             a aceleração pode tender a infinito, não representável*/
         }
+
+        if ( forcaFinalN2.fim.pos_x - forcaFinalN2.inicio.pos_x < 0 || forcaFinalN2.fim.pos_y - forcaFinalN2.inicio.pos_y < 0) {
+           direcao =  -1; 
+        }else{
+            direcao = 1;
+        }
         
-        deslocamentoN2 = sqrt(pow(nave2.vel_x,2) + pow(nave2.vel_y, 2))*i + (aceleracao*i*i/2);
-        forcaFinalN2 = normalizaForca(nave2.coordenadas, forcaFinalN2.fim, deslocamentoN2);
+        nave2.coordenadas.pos_x += direcao * nave2.vel_x * delta_t;
+        nave2.coordenadas.pos_y += direcao * nave2.vel_y * delta_t;
+
+        nave2.vel_x += aceleracao * delta_t;
+        nave2.vel_y += aceleracao * delta_t;
 
         /*PROJETEIS*/
         while(proj != NULL && totalProjeteis > 0){
@@ -209,21 +221,7 @@ int main(int argc, char *argv[]){
             proj = proj->prox;
         }
         
-        /*ATUALIZACOES DAS POSICOES DAS NAVES*/
-        nave1.coordenadas.pos_x = forcaFinalN1.fim.pos_x;
-        nave1.coordenadas.pos_y = forcaFinalN1.fim.pos_y;
-        printf("NAVE 1: (%lf , %lf)\n", nave1.coordenadas.pos_x, nave1.coordenadas.pos_y);
-
-        nave2.coordenadas.pos_x = forcaFinalN2.fim.pos_x;
-        nave2.coordenadas.pos_y = forcaFinalN2.fim.pos_y;
-        printf("NAVE 2: (%lf , %lf)\n", nave2.coordenadas.pos_x, nave2.coordenadas.pos_y);
-
         aux = listaProjeteis;
-        for(k = 0; k < totalProjeteis && aux != NULL; k++, aux = aux->prox){
-            aux->coordenadas.pos_x = coordProjeteis[k].pos_x;
-            aux->coordenadas.pos_y = coordProjeteis[k].pos_y;
-            printf("PROJÉTIL %d: (%lf , %lf)\n", k+1, aux->coordenadas.pos_x, aux->coordenadas.pos_y);
-        }
 
         printf("\n\n");
     }

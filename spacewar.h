@@ -1,5 +1,5 @@
 /* STRUCTS PARA A MANIPULAÇÃO DE DADOS */
-#define eps 0.000001
+#define eps 1e-9
 
 struct coordenada{
     double pos_x, pos_y;
