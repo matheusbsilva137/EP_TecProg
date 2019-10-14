@@ -123,7 +123,6 @@ Forca calcCoordForcaRes (Forca forca1, Forca forca2, double intensidade){
         /*os pontos estão desalinhados, aplico a regra do palalelogramo
         somando os vetores. Assim, consigo a coordenada do ponto final
         da forca resultante*/
-        printf("Desalinhadso\n");
         fr.pos_x = forca1.fim.pos_x - forca2.fim.pos_x;
         fr.pos_y = forca1.fim.pos_y - forca2.fim.pos_y;
     }

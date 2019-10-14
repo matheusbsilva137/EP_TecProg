@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include "xwc.h"
 #include "spacewar.h"
 
 #define G 6.67e-11
@@ -12,7 +13,7 @@ int main(int argc, char *argv[]){
     FILE* arquivo;
     Planeta  planetaJogo;
     Nave nave1, nave2;
-    int  totalProjeteis, k = 0, direcao;
+    int  totalProjeteis, k = 0, direcaoX, direcaoY;
     float i;
     double masP, posxP, posyP, velxP, velyP, tmpTotalSimul, tempoDeVida;
     double d, fr, f1, f2, fproj = 0;
@@ -21,6 +22,9 @@ int main(int argc, char *argv[]){
     Projetil* listaProjeteis = NULL;
     Projetil* aux, *proj;
     Forca forca1, forca2, forcaFinalN1, forcaFinalN2, forcaFinalP, forcaProj, velNave;
+    WINDOW *w1;
+
+    w1 = InitGraph(400,400, "Teste animado");
 
     arquivo = fopen(argv[1], "r");
     
@@ -149,14 +153,20 @@ int main(int argc, char *argv[]){
             a aceleração pode tender a infinito, não representável*/
         }
 
-        if ( forcaFinalN2.fim.pos_x - forcaFinalN2.inicio.pos_x < 0 || forcaFinalN2.fim.pos_y - forcaFinalN2.inicio.pos_y < 0) {
-           direcao =  -1; 
+        if ( forcaFinalN2.fim.pos_x - forcaFinalN2.inicio.pos_x < 0) {
+           direcaoX =  -1; 
         }else{
-            direcao = 1;
+            direcaoX = 1;
         }
         
-        nave2.coordenadas.pos_x += direcao * nave2.vel_x * delta_t;
-        nave2.coordenadas.pos_y += direcao * nave2.vel_y * delta_t;
+        if(forcaFinalN2.fim.pos_y - forcaFinalN2.inicio.pos_y < 0){
+            direcaoY = -1;
+        }else{
+            direcaoY = 1;
+        }
+
+        nave2.coordenadas.pos_x += direcaoX * nave2.vel_x * delta_t;
+        nave2.coordenadas.pos_y += direcaoY * nave2.vel_y * delta_t;
 
         nave2.vel_x += aceleracao * delta_t;
         nave2.vel_y += aceleracao * delta_t;

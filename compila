@@ -1,4 +1,6 @@
 gcc -g -c spacewar.c -o libspacewar.o
+make
 ar rv libspacewar.a libspacewar.o
-gcc -g ep1TecProg.c -L. libspacewar.a -o ep1TecProg -lm
+ar rv xwc.a xwc.o
+gcc -g ep1TecProg.c -L. libspacewar.a xwc.a -o ep1TecProg -lm
 ./ep1TecProg 0.txt
