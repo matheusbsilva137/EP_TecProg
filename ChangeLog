@@ -1,0 +1,15 @@
+2019-09-01 Marco Dimas Gubitoso <gubi@ime.usp.br>
+	* xwc.tar: contém a versão antiga adaptada para Autoconf 2.6
+	
+2019-09-01 Marco Dimas Gubitoso <gubi@ime.usp.br>
+	* xwc.h: declaração de tipo Color, equivalente a unsigned long int
+
+	* xwc.c, teste.c, teste2, teste3.c: acerto das declarações para
+	Color
+
+	* teste.c: ajustes de tempo
+
+	* teste2.c: temporização da animação, mudança no título da janela
+
+	* xwc.c: atualização da chamada para XKeycodeToKeysym, que está
+	em fase de desativação por XkbKeycodeToKeysym

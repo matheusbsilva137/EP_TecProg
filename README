@@ -1,0 +1,30 @@
+						 ______________________
+
+								 README
+
+						  Marco Dimas Gubitoso
+						 ______________________
+
+
+Table of Contents
+_________________
+
+1 xwc
+
+
+1 xwc
+=====
+
+  `xwc' é uma biblioteca que encapsula chamadas diretas para a `Xlib' e
+  a `Xpm' de modo a simplificar seu uso.
+
+  A maior parte dos argumentos foi trocada por valores de uso mais comum
+  e outras funções se basearam em bibliotecas gráficas mais simples.
+
+  A documentação das funções está em `xwc.h' e existem três programas de
+  testes para ilustrar as funcionalidades:
+
+  * `teste.c' Cria retângulos coloridos e mostra as chamadas mais
+    simples.
+  * `teste2.c' Mostra como fazer uma animação simples.
+  * `teste3.c' Uso da biblioteca `Xpm' para ler e gravar /sprites/.

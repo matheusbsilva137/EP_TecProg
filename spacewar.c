@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "spacewar.h"
 #define G 6.674e-11
+#define eps 1e-5
 
 void insereProjetil(double mas, double posx, double posy, double velx, double vely, Projetil** inicio);
 
@@ -79,13 +80,13 @@ double forcaResultante(Forca forca1, Forca forca2){
 
     produtoEscalar = ((v1.pos_x) * (v2.pos_x)) + ((v1.pos_y) * (v2.pos_y));
     produtoNormas = forca1.intensidade * forca2.intensidade;
-    if (produtoNormas != 0) {
+    if (produtoNormas > 0 + eps || produtoNormas < 0 - eps) {
         cosForca = produtoEscalar / produtoNormas;
         forcaResultante = sqrt(pow(forca1.intensidade,2)+pow(forca2.intensidade,2)+2*forca1.intensidade*forca2.intensidade*cosForca);
     }else{
-        if(forca1.intensidade == 0 && forca2.intensidade != 0){
+        if( fabs(forca1.intensidade) <= 0 + eps && ( forca2.intensidade >= 0 + eps || forca2.intensidade <= 0 - eps  ) ){
             forcaResultante = forca2.intensidade;
-        }else if(forca2.intensidade == 0 && forca1.intensidade != 0){
+        }else if( fabs(forca2.intensidade) <= 0 + eps && ( forca1.intensidade >= 0 + eps || forca1.intensidade <= 0 - eps  )){
             forcaResultante = forca1.intensidade;
         }else{
             forcaResultante = 0;
