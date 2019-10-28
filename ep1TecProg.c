@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
 #include <unistd.h>
 #include "xwc.h"
@@ -10,13 +11,81 @@
 #define Mt 6.02e+24
 #define delta_t 0.01
 
+/*Imprime graficamente a nave na Pic P1 usando P2 como base para aplicação da máscara. Ajusta a angulação da nave*/
+void exibeNave(Nave nave, Forca forcaFinalN, long coordXMax, long coordYMax, MASK* msks, PIC* pics, PIC P1, PIC P2, int ordemNave);
+
+/*Cria os vetores e mascaras a serem alocados nas posicoes dos vetores passados como parametro
+Utiliza os arquivos do diretorio, abrindo todas as imagens referentes às angulações das naves.*/
+void criaListaMaskPic(MASK *msks, PIC *pics, WINDOW* w1);
+
+void criaListaMaskPic(MASK *msks, PIC *pics, WINDOW* w1){
+    char *str1 = "nave1-";
+    char *str2 = "g.xpm";
+    char arq[15];
+    int i;
+
+    for( i = 0; i <= 710; i += 10 ){
+        if( i <= 350 )
+            snprintf (arq, 15, "%s%03d%s", str1, i, str2 );
+        else
+            snprintf (arq, 15, "%s%03d%s", str1, i-360, str2 );
+        printf("ABRINDO: %s\n",arq);
+
+        msks[i/10] = NewMask(w1, 28, 28);
+        pics[i/10] = ReadPic(w1, arq, msks[i/10]);
+
+        if(i == 350 ) str1 = "nave2-";
+    }
+}
+
+void exibeNave(Nave nave, Forca forcaFinalN, long coordXMax, long coordYMax, MASK* msks, PIC* pics, PIC P1, PIC P2, int ordemNave){
+    int angulo;
+    
+    angulo = ( (int) round(calculaAngulo(forcaFinalN) ) )/ 10;
+    angulo += 35*(ordemNave-1);
+
+    /*Posicionamento dos elementos de acordo com a origem do plano (Centro (400, 320) )*/
+    if(nave.coordenadas.pos_x >= 0 && nave.coordenadas.pos_y >= 0){
+        /*1º QUADRANTE*/
+        PutPic(P2, P1, 400 + nave.coordenadas.pos_x / coordXMax, 320 - nave.coordenadas.pos_y / coordYMax, 28, 28, 0, 0);
+        SetMask(P2, msks[angulo]);
+        PutPic(P2, pics[angulo], 0, 0, 28, 28, 0, 0);
+        PutPic(P1, P2, 0, 0, 28, 28, 400 + nave.coordenadas.pos_x / coordXMax, 320 - nave.coordenadas.pos_y / coordYMax);
+        UnSetMask(P2);
+        printf("Coorde da janela 1: %lf, %lf \n", 400 + nave.coordenadas.pos_x / coordXMax, 320 - nave.coordenadas.pos_y / coordYMax);
+    }else if(nave.coordenadas.pos_x < 0 && nave.coordenadas.pos_y > 0){
+        /*2º QUADRANTE*/
+        PutPic(P2, P1, 400 - fabs(nave.coordenadas.pos_x) / coordXMax, 320 - nave.coordenadas.pos_y / coordYMax, 28, 28,  0, 0);
+        SetMask(P2, msks[angulo]);
+        PutPic(P2, pics[angulo], 0, 0, 28, 28, 0, 0);
+        PutPic(P1, P2, 0, 0, 28, 28, 400 - fabs(nave.coordenadas.pos_x) / coordXMax, 320 - nave.coordenadas.pos_y / coordYMax);
+        UnSetMask(P2);
+        printf("Coorde da janela 2: %lf, %lf \n", 400 - nave.coordenadas.pos_x / coordXMax, 320 - nave.coordenadas.pos_y / coordYMax);
+    }else if(nave.coordenadas.pos_x < 0 && nave.coordenadas.pos_y < 0){
+        /*3º QUADRANTE*/
+        PutPic(P2, P1, 400 - fabs(nave.coordenadas.pos_x) / coordXMax, 320 + fabs(nave.coordenadas.pos_y) / coordYMax, 28, 28, 0, 0);
+        SetMask(P2, msks[angulo]);
+        PutPic(P2, pics[angulo], 0, 0, 28, 28, 0, 0);
+        PutPic(P1, P2, 0, 0, 28, 28, 400 - fabs(nave.coordenadas.pos_x) / coordXMax, 320 + fabs(nave.coordenadas.pos_y) / coordYMax );
+        UnSetMask(P2);
+        printf("Coorde da janela 3: %lf, %lf \n", 400 - nave.coordenadas.pos_x / coordXMax, 320 + nave.coordenadas.pos_y / coordYMax);
+    }else{
+        /*4º QUADRANTE*/
+        PutPic(P2, P1, 400 + nave.coordenadas.pos_x / coordXMax, 320 + fabs(nave.coordenadas.pos_y) / coordYMax, 28, 28, 0, 0);
+        SetMask(P2, msks[angulo]);
+        PutPic(P2, pics[angulo], 0, 0, 28, 28, 0, 0);
+        PutPic(P1, P2, 0, 0, 28, 28, 400 + nave.coordenadas.pos_x / coordXMax, 320 + fabs(nave.coordenadas.pos_y) / coordYMax);
+        UnSetMask(P2);
+        printf("Coorde da janela 4: %lf, %lf \n", 400 + nave.coordenadas.pos_x / coordXMax, 320 + fabs(nave.coordenadas.pos_y) / coordYMax);
+    }
+}
+
 int main(int argc, char *argv[]){
     FILE* arquivo;
     Planeta  planetaJogo;
     Nave nave1, nave2;
     Coordenada *coordProjeteis;
-    Projetil* listaProjeteis = NULL;
-    Projetil* aux, *proj;
+    Projetil* listaProjeteis = NULL, *aux, *proj;
     Forca forca1, forca2, forcaFinalN1, forcaFinalN2, forcaFinalP, forcaProj, velNave;
     int  totalProjeteis, k = 0, direcaoX, direcaoY;
     float i;
@@ -25,21 +94,18 @@ int main(int argc, char *argv[]){
     double aceleracao, deslocamentoN1, deslocamentoN2, deslocamentoP;
 
     WINDOW *w1;
-    PIC P1, P2, P3, Aux, Aux2;
-    MASK msk, msk2;
+    PIC P1, P2, P3, pics[72];
+    MASK msks[72];
     long width = 33e6, height = 528e5;
     long coordX, coordY, coordXMax = width/400, coordYMax = height/320;
-
+    
     w1 = InitGraph(800,640, "Space War");
 
     P1 = ReadPic(w1, "fundo.xpm", NULL);
     P2 = NewPic(w1, 28, 28);
     P3 = ReadPic(w1, "fundo.xpm", NULL);
 
-    msk = NewMask(w1, 28, 28);
-    msk2 = NewMask(w1, 28, 28);
-    Aux = ReadPic(w1, "nave.xpm", msk);
-    Aux2 = ReadPic(w1, "nave2.xpm", msk2);
+    criaListaMaskPic(msks, pics, w1);
 
     arquivo = fopen(argv[1], "r");
     
@@ -63,123 +129,6 @@ int main(int argc, char *argv[]){
     coordProjeteis = malloc(totalProjeteis*sizeof(Coordenada));
     
     for(i = 0; i < tmpTotalSimul; i = i+delta_t){
-        
-        
-
-        coordX = (int) nave1.coordenadas.pos_x;
-        coordY = (int) nave1.coordenadas.pos_y;
-
-        /*CONTROLE DA SUPERFÍCIE TOROIDAL*/
-        if (coordX > width){
-            coordX =  -(width) + (coordX % width);
-        }else if (coordX <  - (width) ){
-            coordX =  width - (-coordX % width);
-        }
-
-        if (coordY > height ){
-            coordY =  -(height) + (coordY % height);
-        }else if (coordY < - (height)){
-            coordY =  height - (-coordY % height);
-        }
-
-        nave1.coordenadas.pos_x = (double) coordX;
-        nave1.coordenadas.pos_y = (double) coordY;
-
-        printf("******Tempo %f\n", i);
-        printf("NAVE 1: (%lf , %lf)\n", nave1.coordenadas.pos_x, nave1.coordenadas.pos_y);
-
-        /*Posicionamento dos elementos de acordo com a origem do plano (Centro (400, 320) )*/
-        if(nave1.coordenadas.pos_x >= 0 && nave1.coordenadas.pos_y >= 0){
-            /*1º QUADRANTE*/
-            PutPic(P2, P1, 400 + nave1.coordenadas.pos_x / coordXMax, 320 - nave1.coordenadas.pos_y / coordYMax, 28, 28, 0, 0);
-            SetMask(P2, msk);
-            PutPic(P2, Aux, 0, 0, 28, 28, 0, 0);
-            PutPic(P1, P2, 0, 0, 28, 28, 400 + nave1.coordenadas.pos_x / coordXMax, 320 - nave1.coordenadas.pos_y / coordYMax);
-            UnSetMask(P2);
-            printf("Coorde da janela 1: %lf, %lf \n", 400 + nave1.coordenadas.pos_x / coordXMax, 320 - nave1.coordenadas.pos_y / coordYMax);
-        }else if(nave1.coordenadas.pos_x < 0 && nave1.coordenadas.pos_y > 0){
-            /*2º QUADRANTE*/
-            PutPic(P2, P1, 400 - fabs(nave1.coordenadas.pos_x) / coordXMax, 320 - nave1.coordenadas.pos_y / coordYMax, 28, 28,  0, 0);
-            SetMask(P2, msk);
-            PutPic(P2, Aux, 0, 0, 28, 28, 0, 0);
-            PutPic(P1, P2, 0, 0, 28, 28, 400 - fabs(nave1.coordenadas.pos_x) / coordXMax, 320 - nave1.coordenadas.pos_y / coordYMax);
-            UnSetMask(P2);
-            printf("Coorde da janela 2: %lf, %lf \n", 400 - nave1.coordenadas.pos_x / coordXMax, 320 - nave1.coordenadas.pos_y / coordYMax);
-        }else if(nave1.coordenadas.pos_x < 0 && nave1.coordenadas.pos_y < 0){
-            /*3º QUADRANTE*/
-            PutPic(P2, P1, 400 - fabs(nave1.coordenadas.pos_x) / coordXMax, 320 + fabs(nave1.coordenadas.pos_y) / coordYMax, 28, 28, 0, 0);
-            SetMask(P2, msk);
-            PutPic(P2, Aux, 0, 0, 28, 28, 0, 0);
-            PutPic(P1, P2, 0, 0, 28, 28, 400 - fabs(nave1.coordenadas.pos_x) / coordXMax, 320 + fabs(nave1.coordenadas.pos_y) / coordYMax );
-            UnSetMask(P2);
-            printf("Coorde da janela 3: %lf, %lf \n", 400 - nave1.coordenadas.pos_x / coordXMax, 320 + nave1.coordenadas.pos_y / coordYMax);
-        }else{
-            /*4º QUADRANTE*/
-            PutPic(P2, P1, 400 + nave1.coordenadas.pos_x / coordXMax, 320 + fabs(nave1.coordenadas.pos_y) / coordYMax, 28, 28, 0, 0);
-            SetMask(P2, msk);
-            PutPic(P2, Aux, 0, 0, 28, 28, 0, 0);
-            PutPic(P1, P2, 0, 0, 28, 28, 400 + nave1.coordenadas.pos_x / coordXMax, 320 + fabs(nave1.coordenadas.pos_y) / coordYMax);
-            UnSetMask(P2);
-            printf("Coorde da janela 4: %lf, %lf \n", 400 + nave1.coordenadas.pos_x / coordXMax, 320 + fabs(nave1.coordenadas.pos_y) / coordYMax);
-        }
-
-        printf("NAVE 2: (%lf , %lf)\n", nave2.coordenadas.pos_x, nave2.coordenadas.pos_y);
-
-        coordX = (int) nave2.coordenadas.pos_x;
-        coordY = (int) nave2.coordenadas.pos_y;
-
-         /*CONTROLE DA SUPERFÍCIE TOROIDAL*/
-        if (coordX > width){
-            coordX =  -(width) + (coordX % width);
-        }else if (coordX <  - (width) ){
-            coordX =  width - (-coordX % width);
-        }
-
-        if (coordY > height ){
-            coordY =  -(height) + (coordY % height);
-        }else if (coordY < - (height)){
-            coordY =  height - (-coordY % height);
-        }
-
-        nave2.coordenadas.pos_x = (double) coordX;
-        nave2.coordenadas.pos_y = (double) coordY;
-
-        if(nave2.coordenadas.pos_x >= 0 && nave2.coordenadas.pos_y >= 0){
-            /*1º QUADRANTE*/
-            PutPic(P2, P1, 400 + nave2.coordenadas.pos_x / coordXMax, 320 - nave2.coordenadas.pos_y / coordYMax, 28, 28, 0, 0);
-            SetMask(P2, msk2);
-            PutPic(P2, Aux2, 0, 0, 28, 28, 0, 0);
-            PutPic(P1, P2, 0, 0, 28, 28, 400 + nave2.coordenadas.pos_x / coordXMax, 320 - nave2.coordenadas.pos_y / coordYMax);
-            UnSetMask(P2);
-            printf("Coorde da janela 1: %lf, %lf \n", 400 + nave2.coordenadas.pos_x / coordXMax, 320 - nave2.coordenadas.pos_y / coordYMax);
-        }else if(nave2.coordenadas.pos_x < 0 && nave2.coordenadas.pos_y > 0){
-            /*2º QUADRANTE*/
-            PutPic(P2, P1, 400 - fabs(nave2.coordenadas.pos_x) / coordXMax, 320 - nave2.coordenadas.pos_y / coordYMax, 28, 28,  0, 0);
-            SetMask(P2, msk2);
-            PutPic(P2, Aux2, 0, 0, 28, 28, 0, 0);
-            PutPic(P1, P2, 0, 0, 28, 28, 400 - fabs(nave2.coordenadas.pos_x) / coordXMax, 320 - nave2.coordenadas.pos_y / coordYMax);
-            UnSetMask(P2);
-            printf("Coorde da janela 2: %lf, %lf \n", 400 - nave2.coordenadas.pos_x / coordXMax, 320 - nave2.coordenadas.pos_y / coordYMax);
-        }else if(nave2.coordenadas.pos_x < 0 && nave2.coordenadas.pos_y < 0){
-            /*3º QUADRANTE*/
-            PutPic(P2, P1, 400 - fabs(nave2.coordenadas.pos_x) / coordXMax, 320 + fabs(nave2.coordenadas.pos_y) / coordYMax, 28, 28, 0, 0);
-            SetMask(P2, msk2);
-            PutPic(P2, Aux2, 0, 0, 28, 28, 0, 0);
-            PutPic(P1, P2, 0, 0, 28, 28, 400 - fabs(nave2.coordenadas.pos_x) / coordXMax, 320 + fabs(nave2.coordenadas.pos_y) / coordYMax );
-            UnSetMask(P2);
-            printf("Coorde da janela 3: %lf, %lf \n", 400 - nave2.coordenadas.pos_x / coordXMax, 320 + nave2.coordenadas.pos_y / coordYMax);
-        }else{
-            /*4º QUADRANTE*/
-            PutPic(P2, P1, 400 + nave2.coordenadas.pos_x / coordXMax, 320 + fabs(nave2.coordenadas.pos_y) / coordYMax, 28, 28, 0, 0);
-            SetMask(P2, msk2);
-            PutPic(P2, Aux2, 0, 0, 28, 28, 0, 0);
-            PutPic(P1, P2, 0, 0, 28, 28, 400 + nave2.coordenadas.pos_x / coordXMax, 320 + fabs(nave2.coordenadas.pos_y) / coordYMax);
-            UnSetMask(P2);
-            printf("Coorde da janela 4: %lf, %lf \n", 400 + nave2.coordenadas.pos_x / coordXMax, 320 + fabs(nave2.coordenadas.pos_y) / coordYMax);
-        }
-        
-        PutPic(w1, P1, 0, 0, 800, 640, 0, 0);
-
         for(k = 0; k < totalProjeteis && aux != NULL; k++, aux = aux->prox){
             aux->coordenadas.pos_x = coordProjeteis[k].pos_x;
             aux->coordenadas.pos_y = coordProjeteis[k].pos_y;
@@ -354,12 +303,27 @@ int main(int argc, char *argv[]){
             k++;
             proj = proj->prox;
         }
+
+        /***
+         *IMPRESSÃO DAS COORDENADAS
+         */       
+        printf("******Tempo %f\n", i);
+        printf("NAVE 1: (%lf , %lf)\n", nave1.coordenadas.pos_x, nave1.coordenadas.pos_y);
+        nave1.coordenadas = posicaoToroidal(nave1, width, height);
+        exibeNave(nave1, forcaFinalN1, coordXMax, coordYMax, msks, pics, P1, P2, 1);
         
+        printf("NAVE 2: (%lf , %lf)\n", nave2.coordenadas.pos_x, nave2.coordenadas.pos_y);
+        nave2.coordenadas = posicaoToroidal(nave2, width, height);
+        exibeNave(nave2, forcaFinalN2, coordXMax, coordYMax, msks, pics, P1, P2, 2);
+        
+        PutPic(w1, P1, 0, 0, 800, 640, 0, 0);
+
         aux = listaProjeteis;
+        WFlush();
         usleep(10000);
+        WClear(w1);
         PutPic(P1, P3, 0, 0, 800, 640, 0, 0);
         printf("\n\n");
     }
-
     return 0;
 }

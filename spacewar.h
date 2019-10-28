@@ -37,6 +37,8 @@ typedef struct planeta Planeta;
 
 /* PROTÓTIPOS DAS FUNÇÕES PARA MANIPULAR AS FORÇAS */
 
+double calculaAngulo(Forca f);
+
 void insereProjetil(double mas, double posx, double posy, double velx, double vely, Projetil** inicio);
 
 double distanciaEntrePontos(Coordenada c1, Coordenada c2);
@@ -48,3 +50,5 @@ Forca normalizaForca (Coordenada inicio, Coordenada fim, double intensidade);
 double forcaResultante(Forca forca1, Forca forca2);
 
 Forca calcCoordForcaRes (Forca forca1, Forca forca2, double intensidade);
+
+Coordenada posicaoToroidal(Nave nave, long width, long height);

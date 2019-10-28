@@ -1,21 +1,9 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
+#include "xwc.h"
 #include "spacewar.h"
 #define G 6.674e-11
-#define eps 1e-5
-
-void insereProjetil(double mas, double posx, double posy, double velx, double vely, Projetil** inicio);
-
-double distanciaEntrePontos(Coordenada c1, Coordenada c2);
-
-double forcaGravitacional(double m1, double m2, double d);
-
-Forca normalizaForca (Coordenada inicio, Coordenada fim, double intensidade);
-
-double forcaResultante(Forca forca1, Forca forca2);
-
-Forca calcCoordForcaRes (Forca forca1, Forca forca2, double intensidade);
 
 void insereProjetil(double mas, double posx, double posy, double velx, double vely, Projetil** inicio){
     Projetil* nova;
@@ -101,7 +89,6 @@ Forca calcCoordForcaRes (Forca forca1, Forca forca2, double intensidade){
     Coordenada fr;
     Forca forcaResultante;
     if( fabs(forca1.fim.pos_x - forca2.fim.pos_x) <= eps){
-        printf("Alinhados em x\n");
         /*os pontos estão alinhados em algum x*/
         fr.pos_x = forca1.fim.pos_x;
 
@@ -111,7 +98,6 @@ Forca calcCoordForcaRes (Forca forca1, Forca forca2, double intensidade){
             fr.pos_y = forca2.fim.pos_y - forca1.fim.pos_y;
         }
     }else if( fabs(forca1.fim.pos_y - forca2.fim.pos_y) <= eps ){
-        printf("Alinhados em y");
         /*os pontos estão alinhados em algum y*/
         fr.pos_y = forca1.fim.pos_y;
 
@@ -136,4 +122,48 @@ Forca calcCoordForcaRes (Forca forca1, Forca forca2, double intensidade){
     forcaResultante = normalizaForca(forcaResultante.inicio, forcaResultante.fim, intensidade);
 
     return forcaResultante;
+}
+
+double calculaAngulo(Forca f){
+    /*Determina o angulo entre o vetor (força) direcional da nave e uma reta paralela ao eixo x
+    O angulo retornado está em graus*/
+    double angulo, y, x;
+
+    x = (f.fim.pos_x - f.inicio.pos_x);
+    y = (f.fim.pos_y - f.inicio.pos_y);
+
+    if(y > eps || y < -eps)
+        angulo = atan(x/y) + M_PI_2;
+    else
+        angulo = 0;
+    
+    if( y > 0 )
+        return angulo*180/M_PI; /*Transforma o angulo em em radianos para graus*/
+    else
+        return ( angulo + M_PI )*180 / M_PI;
+}
+
+Coordenada posicaoToroidal(Nave nave, long width, long height){
+    Coordenada c;
+    int coordX, coordY;
+    coordX = (int) nave.coordenadas.pos_x;
+    coordY = (int) nave.coordenadas.pos_y;
+
+        /*CONTROLE DA SUPERFÍCIE TOROIDAL*/
+    if (coordX > width){
+        coordX =  -(width) + (coordX % width);
+    }else if (coordX <  - (width) ){
+        coordX =  width - (-coordX % width);
+    }
+
+    if (coordY > height ){
+        coordY =  -(height) + (coordY % height);
+    }else if (coordY < - (height)){
+        coordY =  height - (-coordY % height);
+    }
+
+    c.pos_x = (double) coordX;
+    c.pos_y = (double) coordY;
+
+    return c;
 }

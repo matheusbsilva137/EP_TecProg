@@ -104,7 +104,7 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_ep1TecProg_OBJECTS = ep1TecProg.$(OBJEXT)
 ep1TecProg_OBJECTS = $(am_ep1TecProg_OBJECTS)
-ep1TecProg_DEPENDENCIES = xwc.o libspacewar.o
+ep1TecProg_DEPENDENCIES = xwc.o spacewar.o
 AM_V_P = $(am__v_P_$(V))
 am__v_P_ = $(am__v_P_$(AM_DEFAULT_VERBOSITY))
 am__v_P_0 = false
@@ -210,7 +210,7 @@ INSTALL_SCRIPT = ${INSTALL}
 INSTALL_STRIP_PROGRAM = $(install_sh) -c -s
 LDFLAGS = 
 LIBOBJS = 
-LIBS = -lX11 -lXpm -lm -L. libspacewar.a
+LIBS = -lX11 -lXpm -lm
 LTLIBOBJS = 
 MAKEINFO = ${SHELL} /home/matheus/Documentos/TecProg/ep/missing makeinfo
 MKDIR_P = /bin/mkdir -p
@@ -272,7 +272,7 @@ top_build_prefix =
 top_builddir = .
 top_srcdir = .
 ep1TecProg_SOURCES = ep1TecProg.c 
-ep1TecProg_LDADD = xwc.o
+ep1TecProg_LDADD = xwc.o spacewar.o
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
