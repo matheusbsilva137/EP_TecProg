@@ -14,7 +14,7 @@ struct forca{
 typedef struct forca Forca;
 
 struct nave{
-    char nome[15];
+    char nome[3];
     double massa, vel_x, vel_y;
     Coordenada coordenadas;
     int quantProjeteisRestantes;
@@ -25,6 +25,7 @@ struct projetil{
     double massa, vel_x, vel_y;
     Coordenada coordenadas;
     int tempoDeVidaRestante;
+    int ativo;
     struct projetil* prox;
 };
 typedef struct projetil Projetil;
@@ -52,3 +53,7 @@ double forcaResultante(Forca forca1, Forca forca2);
 Forca calcCoordForcaRes (Forca forca1, Forca forca2, double intensidade);
 
 Coordenada posicaoToroidal(Nave nave, long width, long height);
+
+void rotacionaNave(Nave* nave, double rad);
+
+void aceleraNave(Nave* nave);

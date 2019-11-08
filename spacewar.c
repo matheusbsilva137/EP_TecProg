@@ -11,6 +11,7 @@ void insereProjetil(double mas, double posx, double posy, double velx, double ve
     nova -> massa = mas;
     nova -> coordenadas.pos_x = posx;
     nova -> coordenadas.pos_y = posy;
+    nova -> ativo = 0;
     nova -> vel_x = velx;
     nova -> vel_y = vely;
     nova -> prox = *inicio;
@@ -138,7 +139,7 @@ double calculaAngulo(Forca f){
         angulo = 0;
     
     if( y > 0 )
-        return angulo*180/M_PI; /*Transforma o angulo em em radianos para graus*/
+        return angulo*180/M_PI; /*Transforma o angulo em radianos para graus*/
     else
         return ( angulo + M_PI )*180 / M_PI;
 }
@@ -153,17 +154,31 @@ Coordenada posicaoToroidal(Nave nave, long width, long height){
     if (coordX > width){
         coordX =  -(width) + (coordX % width);
     }else if (coordX <  - (width) ){
-        coordX =  width - (-coordX % width);
+        coordX =  width - ( (-coordX) % width);
     }
 
     if (coordY > height ){
         coordY =  -(height) + (coordY % height);
     }else if (coordY < - (height)){
-        coordY =  height - (-coordY % height);
+        coordY =  height - ( (-coordY) % height);
     }
 
     c.pos_x = (double) coordX;
     c.pos_y = (double) coordY;
 
     return c;
+}
+
+
+void rotacionaNave(Nave* nave, double graus){
+    double x = nave->vel_x, rad;
+    rad = (graus * M_PI) / 180;
+    nave->vel_x = x * cos(rad) - nave->vel_y * sin(rad);
+    nave->vel_y = x * sin(rad) + nave->vel_y * cos(rad);
+}
+
+void aceleraNave(Nave* nave){
+    double x = nave->vel_x;
+    nave->vel_x = x * 1.1;
+    nave->vel_y = x * 1.1;
 }

@@ -139,3 +139,5 @@ KeyCode WGetKey(WINDOW *w);
 
 /* Retorna o KeySym da última tecla lida */
 KeySym WLastKeySym();
+
+KeyCode WKeySymToKeyCode(KeySym k);

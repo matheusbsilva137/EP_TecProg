@@ -68,6 +68,7 @@ void WFlush()
 
 void WPrint(WINDOW *w, int x, int y, char *msg)
 {
+  XSetForeground(display, w->gc, WNamedColor("WHITE"));
   XDrawString(display, w->ptr.window, w->gc, x, y, msg, strlen(msg));
   XFlush(display);
 }
@@ -337,4 +338,8 @@ KeyCode WGetKey(WINDOW *w)
 KeySym WLastKeySym()
 {
   return key;
+}
+
+KeyCode WKeySymToKeyCode(KeySym k){
+  return XKeysymToKeycode(display, k);
 }

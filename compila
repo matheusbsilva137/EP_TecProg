@@ -2,4 +2,4 @@ gcc -c -lm spacewar.c
 ar rv libspacewar.a spacewar.o
 ar rv xwc.a xwc.o
 make
-./ep1TecProg 2.txt
+./ep1TecProg 7.txt
