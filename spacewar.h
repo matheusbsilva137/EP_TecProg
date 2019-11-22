@@ -18,6 +18,7 @@ struct nave{
     double massa, vel_x, vel_y;
     Coordenada coordenadas;
     int quantProjeteisRestantes;
+    int quantVidasRestantes;
 };
 typedef struct nave Nave;
 

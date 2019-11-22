@@ -50,9 +50,9 @@ int detectaColisao(Coordenada nave1, Coordenada nave2, Projetil *listaProjeteis)
     if(distanciaEntrePontos(nave1, centro) <= 50 && distanciaEntrePontos(nave2, centro) <= 50 )
         return 0;
     if(distanciaEntrePontos(nave1, centro) <= 50 )
-        return 1;
-    if(distanciaEntrePontos(nave2, centro) <= 50 )
         return 2;
+    if(distanciaEntrePontos(nave2, centro) <= 50 )
+        return 1;
     else
         return -1;    
 }
@@ -184,7 +184,7 @@ int main(int argc, char *argv[]){
     double masP, posxP, posyP, velxP, velyP, tmpTotalSimul, tempoDeVida;
     double d, fr, f1, f2, fproj = 0;
     double aceleracao, deslocamentoN1, deslocamentoN2, deslocamentoP;
-    int anguloInicial1, anguloInicial2, exibiuNave1, exibiuNave2;
+    int anguloInicial1, anguloInicial2, exibiuNave1, exibiuNave2, jogar = 1;
     int totRot1 = 0, totRot2 = 0;
     char textoProj[28];
 
@@ -220,388 +220,414 @@ int main(int argc, char *argv[]){
 
     criaListaMaskPic(msks, pics, w1);
 
-    arquivo = fopen(argv[1], "r");
-    
-    fscanf(arquivo, "%lf %lf %lf", &(planetaJogo.raio), &(planetaJogo.massa), &(tmpTotalSimul) );
-    fscanf(arquivo, "%s %lf %lf %lf %lf %lf", nave1.nome, &(nave1.massa), &(nave1.coordenadas.pos_x), &(nave1.coordenadas.pos_y), &(nave1.vel_x), &(nave1.vel_y) );
+    nave1.quantVidasRestantes = 3;
+    nave2.quantVidasRestantes = 3;
 
-    fscanf(arquivo, "%s %lf %lf %lf %lf %lf", nave2.nome, &(nave2.massa), &(nave2.coordenadas.pos_x), &(nave2.coordenadas.pos_y), &(nave2.vel_x), &(nave2.vel_y) );
-    fscanf(arquivo, "%d %lf", &(totalProjeteis), &(tempoDeVida));
-    nave1.quantProjeteisRestantes = totalProjeteis/2;
-    nave2.quantProjeteisRestantes = totalProjeteis/2;
+    while (jogar && nave1.quantVidasRestantes > 0 && nave2.quantVidasRestantes > 0){
+        vencedor = -1;
+        arquivo = fopen(argv[1], "r");
+        
+        fscanf(arquivo, "%lf %lf %lf", &(planetaJogo.raio), &(planetaJogo.massa), &(tmpTotalSimul) );
+        fscanf(arquivo, "%s %lf %lf %lf %lf %lf", nave1.nome, &(nave1.massa), &(nave1.coordenadas.pos_x), &(nave1.coordenadas.pos_y), &(nave1.vel_x), &(nave1.vel_y) );
 
-    planetaJogo.coordenadas.pos_x = 0;
-    planetaJogo.coordenadas.pos_y = 0;
+        fscanf(arquivo, "%s %lf %lf %lf %lf %lf", nave2.nome, &(nave2.massa), &(nave2.coordenadas.pos_x), &(nave2.coordenadas.pos_y), &(nave2.vel_x), &(nave2.vel_y) );
+        fscanf(arquivo, "%d %lf", &(totalProjeteis), &(tempoDeVida));
+        nave1.quantProjeteisRestantes = totalProjeteis/2;
+        nave2.quantProjeteisRestantes = totalProjeteis/2;
 
-    for (i = 1; i <= totalProjeteis; i++){
-        fscanf(arquivo, "%lf %lf %lf %lf %lf", &(masP), &(posxP), &(posyP), &(velxP), &(velyP) );
-        insereProjetil(masP, posxP, posyP, velxP, velyP, &listaProjeteis);
-    }
-    aux = listaProjeteis;
-    proj = listaProjeteis;
-    fclose(arquivo);
-    coordProjeteis = malloc(totalProjeteis*sizeof(Coordenada));
+        planetaJogo.coordenadas.pos_x = 0;
+        planetaJogo.coordenadas.pos_y = 0;
 
-    velNave.inicio.pos_x = 0; velNave.inicio.pos_y = 0;
-    velNave.fim.pos_x = nave1.vel_x; velNave.fim.pos_y = nave1.vel_y;
-    anguloInicial1 = ( (int) round(calculaAngulo(velNave) ) );
-    printf("Angulo inicial da nave 1: %d\n", anguloInicial1);
-
-    velNave.inicio.pos_x = 0; velNave.inicio.pos_y = 0;
-    velNave.fim.pos_x = nave2.vel_x; velNave.fim.pos_y = nave2.vel_y;
-    anguloInicial2 = ( (int) round(calculaAngulo(velNave) ) );
-    printf("Angulo inicial da nave 2: %d\n", anguloInicial2);
-
-    PutPic(P1, P3, 0, 0, 800, 670, 0, 0);
-
-    for(i = 0; i < tmpTotalSimul && vencedor < 0; i = i+delta_t){   
-        exibiuNave1 = 0; exibiuNave2 = 0;     
-        while(WCheckKBD(w1) == 1){
-            key2 = WKeySymToKeyCode(WLastKeySym());
-            key1 = WGetKey(w1);
-
-            /*if( key1 != key2 &&
-                key2 != kAcel1 &&
-                key2 != kDir1 &&
-                key2 != kEsq1 &&
-                key2 != kAtir1 ){
-                    if ( key2 == kDir2){
-                        WPrint(P1, 560, 658, "(DIR)");
-                        totRot2 += 10;
-                    } else if ( key2 == kEsq2){
-                        WPrint(P1, 560, 658, "(ESQ)");
-                        totRot2 -= 10;
-                    } else if ( key2 == kAcel2){
-                        if( (nave2.vel_x < 4e6 && nave2.vel_y < 4e6) && (nave2.vel_x > -4e6 && nave2.vel_y > -4e6) ){
-                            WPrint(P1, 560, 658, "(ACEL)");
-                            rotacionaNave(&nave2, totRot2);
-                            totRot2 = 0;
-                            aceleraNave(&nave2);
-                        }else{
-                            WPrint(P1, 490, 658, "(LIM. DE VEL.)");
-                        }
-                    } else if ( key2 == kAtir2){
-                        
-                    }
-            }*/
-
-            if ( key1 == kDir1){
-                WPrint(P1, 210, 658, "(DIR)");
-                totRot1 += 10;
-                anguloInicial1 = (anguloInicial1+10)%360;
-
-                printf("Angulo em graus da nave 1: %d\n", anguloInicial1/10);
-                coordJanelaN1 = exibeNaveAngulo(nave1, anguloInicial1/10, coordXMax, coordYMax, msks, pics, P1, P2, 1);
-                exibiuNave1 = 1;
-            } else if ( key1 == kEsq1){
-                WPrint(P1, 210, 658, "(ESQ)");
-                totRot1 += 350;
-                anguloInicial1 = (anguloInicial1+350)%360;
-                printf("Angulo em graus da nave 1: %d\n", anguloInicial1/10);
-                coordJanelaN1 = exibeNaveAngulo(nave1, anguloInicial1/10, coordXMax, coordYMax, msks, pics, P1, P2, 1);
-                exibiuNave1 = 1;
-            } else if ( key1 == kAcel1){
-                if( (nave1.vel_x < 5e6 && nave1.vel_y < 5e6) && (nave1.vel_x > -5e6 && nave1.vel_y > -5e6)){
-                    WPrint(P1, 210, 658, "(ACEL)");
-                    rotacionaNave(&nave1, (totRot1+180)%360);
-                    totRot1 = 0;
-                    aceleraNave(&nave1);
-                }else{
-                    WPrint(P1, 210, 658, "(LIM. DE VEL.)");
-                    rotacionaNave(&nave1, (totRot1+180)%360);
-                    totRot1 = 0;
-                }
-            } else if ( key1 == kAtir1){
-
-            }
-
-            /*TECLAS PARA A NAVE 2*/
-            /*if( key1 != key2 &&
-                key2 != kAcel2 &&
-                key2 != kDir2 &&
-                key2 != kEsq2 &&
-                key2 != kAtir2 ){
-                    if ( key2 == kDir1){
-                        WPrint(P1, 560, 658, "(DIR)");
-                        totRot1 += 10;
-                    } else if ( key2 == kEsq1){
-                        WPrint(P1, 560, 658, "(ESQ)");
-                        totRot1 -= 10;
-                    } else if ( key2 == kAcel1){
-                        if( (nave1.vel_x < 4e6 && nave1.vel_y < 4e6) && (nave1.vel_x > -4e6 && nave1.vel_y > -4e6) ){
-                            WPrint(P1, 560, 658, "(ACEL)");
-                            rotacionaNave(&nave1, totRot1);
-                            totRot1 = 0;
-                            aceleraNave(&nave1);
-                        }else{
-                            WPrint(P1, 490, 658, "(LIM. DE VEL.)");
-                        }
-                    } else if ( key2 == kAtir2){
-                        
-                    }
-            }*/
-
-            if ( key1 == kDir2){
-                WPrint(P1, 560, 658, "(DIR)");
-                totRot2 += 10;
-                anguloInicial2 = (anguloInicial2+10)%360;
-                coordJanelaN2 = exibeNaveAngulo(nave2, anguloInicial2/10, coordXMax, coordYMax, msks, pics, P1, P2, 2);
-                exibiuNave2 = 1;
-            } else if ( key1 == kEsq2){
-                WPrint(P1, 560, 658, "(ESQ)");
-                totRot2 += 350;
-                anguloInicial2 = (anguloInicial2+350)%360;
-                coordJanelaN2 = exibeNaveAngulo(nave2, anguloInicial2/10, coordXMax, coordYMax, msks, pics, P1, P2, 2);
-                exibiuNave2 = 1;
-            } else if ( key1 == kAcel2){
-                if( (nave2.vel_x < 4e6 && nave2.vel_y < 5e6) && (nave2.vel_x > -5e6 && nave2.vel_y > -5e6) ){
-                    WPrint(P1, 560, 658, "(ACEL)");
-                    rotacionaNave(&nave2, totRot2%360);
-                    totRot2 = 0;
-                    aceleraNave(&nave2);
-                }else{
-                    WPrint(P1, 490, 658, "(LIM. DE VEL.)");
-                    rotacionaNave(&nave2, totRot2%360);
-                    totRot2 = 0;
-                }
-            } else if ( key1 == kAtir2){
-                
-            }
+        for (i = 1; i <= totalProjeteis; i++){
+            fscanf(arquivo, "%lf %lf %lf %lf %lf", &(masP), &(posxP), &(posyP), &(velxP), &(velyP) );
+            insereProjetil(masP, posxP, posyP, velxP, velyP, &listaProjeteis);
         }
-
-        PutPic(P1, pics[9], 0, 0, 28, 28, 0, 640);
-        if(nave1.quantProjeteisRestantes == 1){
-            snprintf(textoProj, 26, "%s -> %d Projetil Restante", nave1.nome, nave1.quantProjeteisRestantes);
-        }else{
-            snprintf(textoProj, 29, "%s -> %d Projeteis Restantes", nave1.nome, nave1.quantProjeteisRestantes);
-        }
-        WPrint(P1, 32, 658, textoProj );
-
-        PutPic(P1, pics[45], 0, 0, 28, 28, 772, 640);
-        if(nave2.quantProjeteisRestantes == 1){
-            snprintf(textoProj, 26, "%d Projetil Restante <- %s", nave2.quantProjeteisRestantes, nave2.nome );
-        }else{
-            snprintf(textoProj, 29, "%d Projeteis Restantes <- %s", nave2.quantProjeteisRestantes, nave2.nome);
-        }
-        WPrint(P1, 600, 658, textoProj );
-
-        for(k = 0; k < totalProjeteis && aux != NULL; k++, aux = aux->prox){
-            aux->coordenadas.pos_x = coordProjeteis[k].pos_x;
-            aux->coordenadas.pos_y = coordProjeteis[k].pos_y;
-            printf("PROJÉTIL %d: (%lf , %lf)\n", k+1, aux->coordenadas.pos_x, aux->coordenadas.pos_y);
-        }
-
+        aux = listaProjeteis;
         proj = listaProjeteis;
+        fclose(arquivo);
+        coordProjeteis = malloc(totalProjeteis*sizeof(Coordenada));
 
-        /*NAVE 1*/
-        d = distanciaEntrePontos(nave1.coordenadas, planetaJogo.coordenadas);
-        f1 = forcaGravitacional(nave1.massa, planetaJogo.massa, d);
-        
-        forca1 = normalizaForca(nave1.coordenadas, planetaJogo.coordenadas, f1);
+        velNave.inicio.pos_x = 0; velNave.inicio.pos_y = 0;
+        velNave.fim.pos_x = nave1.vel_x; velNave.fim.pos_y = nave1.vel_y;
+        anguloInicial1 = ( (int) round(calculaAngulo(velNave) ) );
 
-        f2 = forcaGravitacional(nave1.massa, nave2.massa, d);
-        forca2 = normalizaForca(nave1.coordenadas, nave2.coordenadas, f2);
+        velNave.inicio.pos_x = 0; velNave.inicio.pos_y = 0;
+        velNave.fim.pos_x = nave2.vel_x; velNave.fim.pos_y = nave2.vel_y;
+        anguloInicial2 = ( (int) round(calculaAngulo(velNave) ) );
 
-        fr = forcaResultante(forca1, forca2);
-        forcaFinalN1 = calcCoordForcaRes(forca1, forca2, fr);
-
-        /*Percorro a lista ligada de projéteis criando uma nova força resultante
-        em cada iteração do while */
-        while (aux != NULL && totalProjeteis > 0) {
-            if(aux->ativo == 1){
-                d = distanciaEntrePontos(nave1.coordenadas, aux->coordenadas);
-                fproj = forcaGravitacional(nave1.massa, aux->massa, d);
-                forcaProj  = normalizaForca(nave1.coordenadas, aux->coordenadas, fproj);
-
-                fr = forcaResultante(forcaProj, forcaFinalN1);
-                forcaFinalN1 = calcCoordForcaRes(forcaFinalN1, forcaProj, fr);
-            }
-
-            aux = aux -> prox;
-        }
-
-        if(nave1.massa > eps){
-            aceleracao = forcaFinalN1.intensidade / nave1.massa;
-        }else{
-            if(forcaFinalN1.intensidade <= eps){
-                aceleracao = 0;
-            }
-            /*Se a massa é muito pequena e a força não é 0, 
-            a aceleração pode tender a infinito, não representável*/
-        }
-
-        if ( forcaFinalN1.fim.pos_x - forcaFinalN1.inicio.pos_x < 0) {
-           direcaoX =  -1; 
-        }else{
-            direcaoX = 1;
-        }
-        
-        if(forcaFinalN1.fim.pos_y - forcaFinalN1.inicio.pos_y < 0){
-            direcaoY = -1;
-        }else{
-            direcaoY = 1;
-        }
-        
-        nave1.vel_x += aceleracao * delta_t;
-        nave1.vel_y += aceleracao * delta_t;
-
-        nave1.coordenadas.pos_x += direcaoX * nave1.vel_x * delta_t;
-        nave1.coordenadas.pos_y += direcaoY * nave1.vel_y * delta_t;       
-
-        /*NAVE 2*/
-        aux = listaProjeteis;
-        d = distanciaEntrePontos(nave2.coordenadas, planetaJogo.coordenadas);
-        f1 = forcaGravitacional(nave2.massa, planetaJogo.massa, d);
-        
-        forca1 = normalizaForca(nave2.coordenadas, planetaJogo.coordenadas, f1);
-
-        f2 = forcaGravitacional(nave2.massa, nave1.massa, d);
-        forca2 = normalizaForca(nave2.coordenadas, nave1.coordenadas, f2);
-
-        fr = forcaResultante(forca1, forca2);
-        forcaFinalN2 = calcCoordForcaRes(forca1, forca2, fr);
-
-        /*Percorro a lista ligada de projéteis criando uma nova força resultante
-        em cada iteração do while */
-        while (aux != NULL && totalProjeteis > 0) {
-            if(aux->ativo == 1){
-                d = distanciaEntrePontos(nave2.coordenadas, aux->coordenadas);
-                fproj = forcaGravitacional(nave2.massa, aux->massa, d);
-                forcaProj  = normalizaForca(nave2.coordenadas, aux->coordenadas, fproj);
-
-                fr = forcaResultante(forcaProj, forcaFinalN2);
-                forcaFinalN2 = calcCoordForcaRes(forcaFinalN2, forcaProj, fr);
-            }
-            aux = aux -> prox;
-        }
-
-        if(nave2.massa > eps){
-            aceleracao = forcaFinalN2.intensidade / nave2.massa;
-        }else{
-            if(forcaFinalN2.intensidade <= eps){
-                aceleracao = 0;
-            }
-            /*Se a massa é muito pequena e a força não é 0, 
-            a aceleração pode tender a infinito, não representável*/
-        }
-
-        if ( forcaFinalN2.fim.pos_x - forcaFinalN2.inicio.pos_x < 0) {
-           direcaoX =  -1; 
-        }else{
-            direcaoX = 1;
-        }
-        
-        if(forcaFinalN2.fim.pos_y - forcaFinalN2.inicio.pos_y < 0){
-            direcaoY = -1;
-        }else{
-            direcaoY = 1;
-        }
-        
-        nave2.vel_x += aceleracao * delta_t;
-        nave2.vel_y += aceleracao * delta_t;
-
-        nave2.coordenadas.pos_x += direcaoX * nave2.vel_x * delta_t;
-        nave2.coordenadas.pos_y += direcaoY * nave2.vel_y * delta_t;
-
-        /*PROJETEIS*/
-        while(proj != NULL && totalProjeteis > 0){
-            if(proj->ativo == 1){
-                aux = listaProjeteis;
-                d = distanciaEntrePontos(proj->coordenadas, planetaJogo.coordenadas);
-                f1 = forcaGravitacional(proj->massa, planetaJogo.massa, d);
-                
-                forca1 = normalizaForca(proj->coordenadas, planetaJogo.coordenadas, f1);
-
-                f2 = forcaGravitacional(proj->massa, nave1.massa, d);
-                forca2 = normalizaForca(proj->coordenadas, nave1.coordenadas, f2);
-
-                fr = forcaResultante(forca1, forca2);
-                forcaFinalP = calcCoordForcaRes(forca1, forca2, fr);
-
-                f2 = forcaGravitacional(proj->massa, nave2.massa, d);
-                forca2 = normalizaForca(proj->coordenadas, nave2.coordenadas, f2);
-                fr = forcaResultante(forcaFinalP, forca2);
-
-                forcaFinalP = calcCoordForcaRes(forcaFinalP, forca2, fr);
-
-                /*Percorro a lista ligada de projéteis criando uma nova força resultante
-                em cada iteração do while */
-                while (aux != NULL && totalProjeteis > 0) {
-                    d = distanciaEntrePontos(proj->coordenadas, aux->coordenadas);
-                    fproj = forcaGravitacional(proj->massa, aux->massa, d);
-                    forcaProj  = normalizaForca(proj->coordenadas, aux->coordenadas, fproj);
-
-                    fr = forcaResultante(forcaProj, forcaFinalP);
-                    forcaFinalP = calcCoordForcaRes(forcaFinalP, forcaProj, fr);
-
-                    aux = aux -> prox;
-                }
-
-                velNave.inicio.pos_x = proj->coordenadas.pos_x; velNave.inicio.pos_y = proj->coordenadas.pos_y;
-                velNave.fim.pos_x    = proj->vel_x; velNave.fim.pos_y = proj->vel_y;
-                velNave.intensidade  = sqrt( pow(proj->vel_x,2) + pow(proj->vel_y,2));
-                velNave              = normalizaForca(proj->coordenadas, velNave.fim , velNave.intensidade);
-
-                fr = forcaResultante(velNave, forcaFinalP);
-                forcaFinalP = calcCoordForcaRes(forcaFinalP, velNave, fr);
-
-                if(proj->massa > eps){
-                    aceleracao = forcaFinalP.intensidade / proj->massa;
-                }else{
-                    if(forcaFinalP.intensidade <= eps){
-                        aceleracao = 0;
-                    }
-                    /*Se a massa é muito pequena e a força não é 0, 
-                    a aceleração pode tender a infinito, não representável*/
-                }
-
-                if ( forcaFinalP.fim.pos_x - forcaFinalP.inicio.pos_x < 0) {
-                    direcaoX =  -1; 
-                }else{
-                    direcaoX = 1;
-                }
-            
-                if(forcaFinalP.fim.pos_y - forcaFinalP.inicio.pos_y < 0){
-                    direcaoY = -1;
-                }else{
-                    direcaoY = 1;
-                }
-
-                coordProjeteis[k].pos_x += direcaoX * nave2.vel_x * delta_t;
-                coordProjeteis[k].pos_y += direcaoY * nave2.vel_y * delta_t;
-
-                proj->vel_x += aceleracao * delta_t;
-                proj->vel_y += aceleracao * delta_t;
-
-                exibeProjetil(proj, forcaFinalP, coordXMax, coordYMax, P1);
-                k++;
-            }
-            proj = proj->prox;
-        }
-
-        /***
-         *IMPRESSÃO DAS COORDENADAS
-         */       
-        printf("******Tempo %f\n", i);
-        printf("NAVE 1: (%lf , %lf)\n", nave1.coordenadas.pos_x, nave1.coordenadas.pos_y);
-        nave1.coordenadas = posicaoToroidal(nave1, width, height);
-        if( !exibiuNave1 )
-            coordJanelaN1 = exibeNaveAngulo(nave1, (anguloInicial1)/10, coordXMax, coordYMax, msks, pics, P1, P2, 1);
-
-        printf("NAVE 2: (%lf , %lf)\n", nave2.coordenadas.pos_x, nave2.coordenadas.pos_y);
-        nave2.coordenadas = posicaoToroidal(nave2, width, height);
-        if( !exibiuNave2 )
-            coordJanelaN2 = exibeNaveAngulo(nave2, (anguloInicial2)/10, coordXMax, coordYMax, msks, pics, P1, P2, 2);
-
-        vencedor = detectaColisao(coordJanelaN1, coordJanelaN2, listaProjeteis);
-
-        PutPic(w1, P1, 0, 0, 800, 670, 0, 0);
-        aux = listaProjeteis;
-        WFlush();
-        usleep(10000);
-        WClear(w1);
         PutPic(P1, P3, 0, 0, 800, 670, 0, 0);
-        printf("\n\n");
+
+        for(i = 0; i < tmpTotalSimul && vencedor < 0; i = i+delta_t){   
+            exibiuNave1 = 0; exibiuNave2 = 0;     
+            while(WCheckKBD(w1) == 1){
+                key2 = WKeySymToKeyCode(WLastKeySym());
+                key1 = WGetKey(w1);
+
+                /*if( key1 != key2 &&
+                    key2 != kAcel1 &&
+                    key2 != kDir1 &&
+                    key2 != kEsq1 &&
+                    key2 != kAtir1 ){
+                        if ( key2 == kDir2){
+                            WPrint(P1, 560, 658, "(DIR)");
+                            totRot2 += 10;
+                        } else if ( key2 == kEsq2){
+                            WPrint(P1, 560, 658, "(ESQ)");
+                            totRot2 -= 10;
+                        } else if ( key2 == kAcel2){
+                            if( (nave2.vel_x < 4e6 && nave2.vel_y < 4e6) && (nave2.vel_x > -4e6 && nave2.vel_y > -4e6) ){
+                                WPrint(P1, 560, 658, "(ACEL)");
+                                rotacionaNave(&nave2, totRot2);
+                                totRot2 = 0;
+                                aceleraNave(&nave2);
+                            }else{
+                                WPrint(P1, 490, 658, "(LIM. DE VEL.)");
+                            }
+                        } else if ( key2 == kAtir2){
+                            
+                        }
+                }*/
+
+                if ( key1 == kDir1){
+                    WPrint(P1, 210, 658, "(DIR)");
+                    totRot1 += 10;
+                    anguloInicial1 = (anguloInicial1+10)%360;
+
+                    printf("Angulo em graus da nave 1: %d\n", anguloInicial1/10);
+                    coordJanelaN1 = exibeNaveAngulo(nave1, anguloInicial1/10, coordXMax, coordYMax, msks, pics, P1, P2, 1);
+                    exibiuNave1 = 1;
+                } else if ( key1 == kEsq1){
+                    WPrint(P1, 210, 658, "(ESQ)");
+                    totRot1 += 350;
+                    anguloInicial1 = (anguloInicial1+350)%360;
+                    printf("Angulo em graus da nave 1: %d\n", anguloInicial1/10);
+                    coordJanelaN1 = exibeNaveAngulo(nave1, anguloInicial1/10, coordXMax, coordYMax, msks, pics, P1, P2, 1);
+                    exibiuNave1 = 1;
+                } else if ( key1 == kAcel1){
+                    if( (nave1.vel_x < 5e6 && nave1.vel_y < 5e6) && (nave1.vel_x > -5e6 && nave1.vel_y > -5e6)){
+                        WPrint(P1, 210, 658, "(ACEL)");
+                        rotacionaNave(&nave1, (totRot1+180)%360);
+                        totRot1 = 0;
+                        aceleraNave(&nave1);
+                    }else{
+                        WPrint(P1, 210, 658, "(LIM. DE VEL.)");
+                        rotacionaNave(&nave1, (totRot1+180)%360);
+                        totRot1 = 0;
+                    }
+                } else if ( key1 == kAtir1){
+
+                }
+
+                /*TECLAS PARA A NAVE 2*/
+                /*if( key1 != key2 &&
+                    key2 != kAcel2 &&
+                    key2 != kDir2 &&
+                    key2 != kEsq2 &&
+                    key2 != kAtir2 ){
+                        if ( key2 == kDir1){
+                            WPrint(P1, 560, 658, "(DIR)");
+                            totRot1 += 10;
+                        } else if ( key2 == kEsq1){
+                            WPrint(P1, 560, 658, "(ESQ)");
+                            totRot1 -= 10;
+                        } else if ( key2 == kAcel1){
+                            if( (nave1.vel_x < 4e6 && nave1.vel_y < 4e6) && (nave1.vel_x > -4e6 && nave1.vel_y > -4e6) ){
+                                WPrint(P1, 560, 658, "(ACEL)");
+                                rotacionaNave(&nave1, totRot1);
+                                totRot1 = 0;
+                                aceleraNave(&nave1);
+                            }else{
+                                WPrint(P1, 490, 658, "(LIM. DE VEL.)");
+                            }
+                        } else if ( key2 == kAtir2){
+                            
+                        }
+                }*/
+
+                if ( key1 == kDir2){
+                    WPrint(P1, 560, 658, "(DIR)");
+                    totRot2 += 10;
+                    anguloInicial2 = (anguloInicial2+10)%360;
+                    coordJanelaN2 = exibeNaveAngulo(nave2, anguloInicial2/10, coordXMax, coordYMax, msks, pics, P1, P2, 2);
+                    exibiuNave2 = 1;
+                } else if ( key1 == kEsq2){
+                    WPrint(P1, 560, 658, "(ESQ)");
+                    totRot2 += 350;
+                    anguloInicial2 = (anguloInicial2+350)%360;
+                    coordJanelaN2 = exibeNaveAngulo(nave2, anguloInicial2/10, coordXMax, coordYMax, msks, pics, P1, P2, 2);
+                    exibiuNave2 = 1;
+                } else if ( key1 == kAcel2){
+                    if( (nave2.vel_x < 4e6 && nave2.vel_y < 5e6) && (nave2.vel_x > -5e6 && nave2.vel_y > -5e6) ){
+                        WPrint(P1, 560, 658, "(ACEL)");
+                        rotacionaNave(&nave2, totRot2%360);
+                        totRot2 = 0;
+                        aceleraNave(&nave2);
+                    }else{
+                        WPrint(P1, 490, 658, "(LIM. DE VEL.)");
+                        rotacionaNave(&nave2, totRot2%360);
+                        totRot2 = 0;
+                    }
+                } else if ( key1 == kAtir2){
+                    
+                }
+            }
+
+            PutPic(P1, pics[9], 0, 0, 28, 28, 0, 640);
+            if(nave1.quantProjeteisRestantes == 1){
+                snprintf(textoProj, 26, "%s -> %d Projetil Restante", nave1.nome, nave1.quantProjeteisRestantes);
+            }else{
+                snprintf(textoProj, 29, "%s -> %d Projeteis Restantes", nave1.nome, nave1.quantProjeteisRestantes);
+            }
+            WPrint(P1, 32, 658, textoProj );
+
+            PutPic(P1, pics[45], 0, 0, 28, 28, 772, 640);
+            if(nave2.quantProjeteisRestantes == 1){
+                snprintf(textoProj, 26, "%d Projetil Restante <- %s", nave2.quantProjeteisRestantes, nave2.nome );
+            }else{
+                snprintf(textoProj, 29, "%d Projeteis Restantes <- %s", nave2.quantProjeteisRestantes, nave2.nome);
+            }
+            WPrint(P1, 600, 658, textoProj );
+
+            for(k = 0; k < totalProjeteis && aux != NULL; k++, aux = aux->prox){
+                aux->coordenadas.pos_x = coordProjeteis[k].pos_x;
+                aux->coordenadas.pos_y = coordProjeteis[k].pos_y;
+                printf("PROJÉTIL %d: (%lf , %lf)\n", k+1, aux->coordenadas.pos_x, aux->coordenadas.pos_y);
+            }
+
+            proj = listaProjeteis;
+
+            /*NAVE 1*/
+            d = distanciaEntrePontos(nave1.coordenadas, planetaJogo.coordenadas);
+            f1 = forcaGravitacional(nave1.massa, planetaJogo.massa, d);
+            
+            forca1 = normalizaForca(nave1.coordenadas, planetaJogo.coordenadas, f1);
+
+            f2 = forcaGravitacional(nave1.massa, nave2.massa, d);
+            forca2 = normalizaForca(nave1.coordenadas, nave2.coordenadas, f2);
+
+            fr = forcaResultante(forca1, forca2);
+            forcaFinalN1 = calcCoordForcaRes(forca1, forca2, fr);
+
+            /*Percorro a lista ligada de projéteis criando uma nova força resultante
+            em cada iteração do while */
+            while (aux != NULL && totalProjeteis > 0) {
+                if(aux->ativo == 1){
+                    d = distanciaEntrePontos(nave1.coordenadas, aux->coordenadas);
+                    fproj = forcaGravitacional(nave1.massa, aux->massa, d);
+                    forcaProj  = normalizaForca(nave1.coordenadas, aux->coordenadas, fproj);
+
+                    fr = forcaResultante(forcaProj, forcaFinalN1);
+                    forcaFinalN1 = calcCoordForcaRes(forcaFinalN1, forcaProj, fr);
+                }
+
+                aux = aux -> prox;
+            }
+
+            if(nave1.massa > eps){
+                aceleracao = forcaFinalN1.intensidade / nave1.massa;
+            }else{
+                if(forcaFinalN1.intensidade <= eps){
+                    aceleracao = 0;
+                }
+                /*Se a massa é muito pequena e a força não é 0, 
+                a aceleração pode tender a infinito, não representável*/
+            }
+
+            if ( forcaFinalN1.fim.pos_x - forcaFinalN1.inicio.pos_x < 0) {
+            direcaoX =  -1; 
+            }else{
+                direcaoX = 1;
+            }
+            
+            if(forcaFinalN1.fim.pos_y - forcaFinalN1.inicio.pos_y < 0){
+                direcaoY = -1;
+            }else{
+                direcaoY = 1;
+            }
+            
+            nave1.vel_x += aceleracao * delta_t;
+            nave1.vel_y += aceleracao * delta_t;
+
+            nave1.coordenadas.pos_x += direcaoX * nave1.vel_x * delta_t;
+            nave1.coordenadas.pos_y += direcaoY * nave1.vel_y * delta_t;       
+
+            /*NAVE 2*/
+            aux = listaProjeteis;
+            d = distanciaEntrePontos(nave2.coordenadas, planetaJogo.coordenadas);
+            f1 = forcaGravitacional(nave2.massa, planetaJogo.massa, d);
+            
+            forca1 = normalizaForca(nave2.coordenadas, planetaJogo.coordenadas, f1);
+
+            f2 = forcaGravitacional(nave2.massa, nave1.massa, d);
+            forca2 = normalizaForca(nave2.coordenadas, nave1.coordenadas, f2);
+
+            fr = forcaResultante(forca1, forca2);
+            forcaFinalN2 = calcCoordForcaRes(forca1, forca2, fr);
+
+            /*Percorro a lista ligada de projéteis criando uma nova força resultante
+            em cada iteração do while */
+            while (aux != NULL && totalProjeteis > 0) {
+                if(aux->ativo == 1){
+                    d = distanciaEntrePontos(nave2.coordenadas, aux->coordenadas);
+                    fproj = forcaGravitacional(nave2.massa, aux->massa, d);
+                    forcaProj  = normalizaForca(nave2.coordenadas, aux->coordenadas, fproj);
+
+                    fr = forcaResultante(forcaProj, forcaFinalN2);
+                    forcaFinalN2 = calcCoordForcaRes(forcaFinalN2, forcaProj, fr);
+                }
+                aux = aux -> prox;
+            }
+
+            if(nave2.massa > eps){
+                aceleracao = forcaFinalN2.intensidade / nave2.massa;
+            }else{
+                if(forcaFinalN2.intensidade <= eps){
+                    aceleracao = 0;
+                }
+                /*Se a massa é muito pequena e a força não é 0, 
+                a aceleração pode tender a infinito, não representável*/
+            }
+
+            if ( forcaFinalN2.fim.pos_x - forcaFinalN2.inicio.pos_x < 0) {
+            direcaoX =  -1; 
+            }else{
+                direcaoX = 1;
+            }
+            
+            if(forcaFinalN2.fim.pos_y - forcaFinalN2.inicio.pos_y < 0){
+                direcaoY = -1;
+            }else{
+                direcaoY = 1;
+            }
+            
+            nave2.vel_x += aceleracao * delta_t;
+            nave2.vel_y += aceleracao * delta_t;
+
+            nave2.coordenadas.pos_x += direcaoX * nave2.vel_x * delta_t;
+            nave2.coordenadas.pos_y += direcaoY * nave2.vel_y * delta_t;
+
+            /*PROJETEIS*/
+            while(proj != NULL && totalProjeteis > 0){
+                if(proj->ativo == 1){
+                    aux = listaProjeteis;
+                    d = distanciaEntrePontos(proj->coordenadas, planetaJogo.coordenadas);
+                    f1 = forcaGravitacional(proj->massa, planetaJogo.massa, d);
+                    
+                    forca1 = normalizaForca(proj->coordenadas, planetaJogo.coordenadas, f1);
+
+                    f2 = forcaGravitacional(proj->massa, nave1.massa, d);
+                    forca2 = normalizaForca(proj->coordenadas, nave1.coordenadas, f2);
+
+                    fr = forcaResultante(forca1, forca2);
+                    forcaFinalP = calcCoordForcaRes(forca1, forca2, fr);
+
+                    f2 = forcaGravitacional(proj->massa, nave2.massa, d);
+                    forca2 = normalizaForca(proj->coordenadas, nave2.coordenadas, f2);
+                    fr = forcaResultante(forcaFinalP, forca2);
+
+                    forcaFinalP = calcCoordForcaRes(forcaFinalP, forca2, fr);
+
+                    /*Percorro a lista ligada de projéteis criando uma nova força resultante
+                    em cada iteração do while */
+                    while (aux != NULL && totalProjeteis > 0) {
+                        d = distanciaEntrePontos(proj->coordenadas, aux->coordenadas);
+                        fproj = forcaGravitacional(proj->massa, aux->massa, d);
+                        forcaProj  = normalizaForca(proj->coordenadas, aux->coordenadas, fproj);
+
+                        fr = forcaResultante(forcaProj, forcaFinalP);
+                        forcaFinalP = calcCoordForcaRes(forcaFinalP, forcaProj, fr);
+
+                        aux = aux -> prox;
+                    }
+
+                    velNave.inicio.pos_x = proj->coordenadas.pos_x; velNave.inicio.pos_y = proj->coordenadas.pos_y;
+                    velNave.fim.pos_x    = proj->vel_x; velNave.fim.pos_y = proj->vel_y;
+                    velNave.intensidade  = sqrt( pow(proj->vel_x,2) + pow(proj->vel_y,2));
+                    velNave              = normalizaForca(proj->coordenadas, velNave.fim , velNave.intensidade);
+
+                    fr = forcaResultante(velNave, forcaFinalP);
+                    forcaFinalP = calcCoordForcaRes(forcaFinalP, velNave, fr);
+
+                    if(proj->massa > eps){
+                        aceleracao = forcaFinalP.intensidade / proj->massa;
+                    }else{
+                        if(forcaFinalP.intensidade <= eps){
+                            aceleracao = 0;
+                        }
+                        /*Se a massa é muito pequena e a força não é 0, 
+                        a aceleração pode tender a infinito, não representável*/
+                    }
+
+                    if ( forcaFinalP.fim.pos_x - forcaFinalP.inicio.pos_x < 0) {
+                        direcaoX =  -1; 
+                    }else{
+                        direcaoX = 1;
+                    }
+                
+                    if(forcaFinalP.fim.pos_y - forcaFinalP.inicio.pos_y < 0){
+                        direcaoY = -1;
+                    }else{
+                        direcaoY = 1;
+                    }
+
+                    coordProjeteis[k].pos_x += direcaoX * nave2.vel_x * delta_t;
+                    coordProjeteis[k].pos_y += direcaoY * nave2.vel_y * delta_t;
+
+                    proj->vel_x += aceleracao * delta_t;
+                    proj->vel_y += aceleracao * delta_t;
+
+                    exibeProjetil(proj, forcaFinalP, coordXMax, coordYMax, P1);
+                    k++;
+                }
+                proj = proj->prox;
+            }
+
+            /***
+             *IMPRESSÃO DAS COORDENADAS
+            */       
+            printf("******Tempo %f\n", i);
+            printf("NAVE 1: (%lf , %lf)\n", nave1.coordenadas.pos_x, nave1.coordenadas.pos_y);
+            nave1.coordenadas = posicaoToroidal(nave1, width, height);
+            if( !exibiuNave1 )
+                coordJanelaN1 = exibeNaveAngulo(nave1, (anguloInicial1)/10, coordXMax, coordYMax, msks, pics, P1, P2, 1);
+
+            printf("NAVE 2: (%lf , %lf)\n", nave2.coordenadas.pos_x, nave2.coordenadas.pos_y);
+            nave2.coordenadas = posicaoToroidal(nave2, width, height);
+            if( !exibiuNave2 )
+                coordJanelaN2 = exibeNaveAngulo(nave2, (anguloInicial2)/10, coordXMax, coordYMax, msks, pics, P1, P2, 2);
+
+            vencedor = detectaColisao(coordJanelaN1, coordJanelaN2, listaProjeteis);
+
+            PutPic(w1, P1, 0, 0, 800, 670, 0, 0);
+            aux = listaProjeteis;
+            WFlush();
+            usleep(10000);
+            WClear(w1);
+            PutPic(P1, P3, 0, 0, 800, 670, 0, 0);
+            printf("\n\n");
+        }
+        if(vencedor < 0)
+            snprintf(textoProj, 29, "O tempo acabou. Empate!");
+        else if(vencedor == 0){
+            snprintf(textoProj, 29, "As naves colidiram. Empate!");
+            nave2.quantVidasRestantes--;
+            nave1.quantVidasRestantes--;
+        }
+        else if(vencedor == 1){
+            snprintf(textoProj, 29, "Jogador 1 venceu!");
+            nave2.quantVidasRestantes--;
+        }
+        else{
+            snprintf(textoProj, 29, "Jogador 2 venceu!");
+            nave1.quantVidasRestantes--;
+        }
+        
+        WPrint(P1, 340, 638, textoProj );
+        snprintf(textoProj, 50, "Aperte alguma tecla para iniciar o proximo round");
+        WPrint(P1, 260, 658, textoProj );
+        PutPic(w1, P1, 0, 0, 800, 670, 0, 0);
+
+        while(!WCheckKBD(w1));
     }
     return 0;
 }
